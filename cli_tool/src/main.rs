@@ -56,21 +56,3 @@ fn main() -> io::Result<()> {
         None => Ok(())
     }
 }
-
-
-
-
-// fn main() {
-//     let cli = Cli::parse();
-
-//     match &cli.command {
-//         Some(Commands::Ls { list }) => {
-//             if *list {
-//                 println!("Long listing all files in the current directory");
-//             } else {
-//                 println!("Short listing all files in the current directory");
-//             }
-//         }
-//         None => {}
-//     }
-// }
