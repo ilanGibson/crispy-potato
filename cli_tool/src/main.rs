@@ -1,76 +1,60 @@
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use std::{fs, io};
+use std::io::Write;
+use std::error::Error;
 
-
-#[derive(Parser)]
-#[command(version, about, long_about = "test2")]
+#[derive(clap::Parser, Debug)]
+#[command(version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
-    #[command(about = "test")]
-    Ls {
-        #[arg(short, help = "list all directories including hidden")]
-        list: bool,
-
-        file: Option<PathBuf>,
+    List {
+        #[arg(short)]
+        list: bool
     },
-
-    #[command(about = "exit program")]
-    Exit {},
 }
 
+fn main() {
+    loop {
+        print!("cli_tool> ");
+        io::stdout().flush().unwrap();
 
-use std::{fs, io};
-fn main() -> io::Result<()> {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("fail");
+        println!("{}", input);
 
-    let cli = Cli::parse();
+        let mut args: Vec<&str> = input.split_whitespace().collect();
+        args.insert(0, "cli_tool");
+        println!("{:?}", args);
 
-    match &cli.command {
-        Some(Commands::Ls { list, file  }) => {
-            if *list {
-                let entries = fs::read_dir(".")?;
+        let cli: Result<Cli, Box<dyn Error>> = match Cli::try_parse_from(args) {
+            Ok(cli) => Ok(cli),
+            Err(e) => Err(Box::new(e)),
+        };
 
-                for entry in entries {
-                    let entry = entry?;
-                    let path = entry.path();
-                    let filename = path.file_name().unwrap();
-                    println!("{}, {:?}", filename.to_string_lossy(), file);
+
+        print!("{:?}", cli);
+
+        match &cli.unwrap().command {
+            Commands::List { list } => {
+                if *list {
+                    print!("lidst")
+                //     let entries = fs::read_dir(".")?;
+
+                // for entry in entries {
+                //     let entry = entry?;
+                //     let path = entry.path();
+                //     let filename = path.file_name().unwrap();
+                //     println!("{}, {:?}", filename.to_string_lossy(), file);
+                // }
+                } else {
+                    print!("nope")
                 }
-
-                Ok(())
-
-            } else {
-                Ok(())
-            }
+            },
         }
-
-        Some(Commands::Exit {}) => {
-            println!("test");
-            Ok(())
-        }
-
-        None => Ok(())
     }
 }
-
-
-
-
-// fn main() {
-//     let cli = Cli::parse();
-
-//     match &cli.command {
-//         Some(Commands::Ls { list }) => {
-//             if *list {
-//                 println!("Long listing all files in the current directory");
-//             } else {
-//                 println!("Short listing all files in the current directory");
-//             }
-//         }
-//         None => {}
-//     }
-// }
