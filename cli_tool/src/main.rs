@@ -20,8 +20,7 @@ enum Commands {
         #[arg(short)]
         all: bool,
 
-        // #[arg(short, value_name = "FILE")]
-        // file: Option<PathBuf>,
+        path: Option<PathBuf>,
     },
 }
 
@@ -35,22 +34,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let mut args: Vec<&str> = input.split_whitespace().collect();
         args.insert(0, "cli_tool");
-        // println!("{:?}", args);
 
-        let cli: Result<Cli, Box<dyn Error>> = match Cli::try_parse_from(args) {
-            Ok(cli) => Ok(cli),
-            Err(e) => Err(Box::new(e)),
-        };
+        let cli = Cli::parse_from(&args);
 
 
-        // println!("{:?}", cli);
-
-        match &cli.unwrap().command {
-            Commands::Ls { list, all} => {
+        match &cli.command {
+            Commands::Ls { list: _, all, path} => {
+                let default_path = PathBuf::from(".");
                 if *all {
-                    let _ = list_files(".".into(), Some(all));
+                    let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), Some(all));
                 } else {
-                    let _ = list_files(".".into(), None);
+                    let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), None);
                 }
             },
         }
