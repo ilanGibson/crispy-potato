@@ -63,10 +63,10 @@ fn list_files(path: PathBuf, all: Option<&bool> ) -> Result<(), Box<dyn Error>> 
         // convert entry to String
         let entry = entry.to_string_lossy().to_string();
         // if entry does not start with "." (aka is not hidden file) print it
-        if !entry.starts_with(".") {
+        if !entry.starts_with('.') {
             print!("{}\t", entry);
         // if entry starts with "." (aka is hidden file) and show hidden file flag is active, print it
-        } else if entry.starts_with(".") && *hidden_files {
+        } else if entry.starts_with('.') && *hidden_files {
             print!("{}\t", entry);
         // if entry starts with "." (aka is hidden file) but show hidden file flag is inactive, do nothing
         } else {
