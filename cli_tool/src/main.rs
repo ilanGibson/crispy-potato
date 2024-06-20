@@ -22,6 +22,9 @@ enum Commands {
 
         path: Option<PathBuf>,
     },
+
+    Clear {
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -47,6 +50,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), None);
                 }
             },
+
+            Commands::Clear {} => {
+                print!("{esc}c", esc = 27 as char);
+            }
         }
     }
 }
