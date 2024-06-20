@@ -25,6 +25,9 @@ enum Commands {
 
     Clear {
     },
+
+    Exit {
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -53,6 +56,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             Commands::Clear {} => {
                 print!("{esc}c", esc = 27 as char);
+            },
+
+            Commands::Exit {} => {
+                return Ok(());
             }
         }
     }
