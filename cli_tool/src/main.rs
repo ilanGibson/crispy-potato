@@ -55,10 +55,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
 
             Commands::Clear {} => {
-                print!("{esc}c", esc = 27 as char);
+                clear_terminal();
             },
 
             Commands::Exit {} => {
+                clear_terminal();
                 return Ok(());
             }
         }
@@ -89,4 +90,8 @@ fn list_files(path: PathBuf, all: Option<&bool> ) -> Result<(), Box<dyn Error>> 
     }
 
     Ok(())
+}
+
+fn clear_terminal() {
+    print!("{esc}c", esc = 27 as char);
 }
