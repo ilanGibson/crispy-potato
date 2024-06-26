@@ -22,6 +22,12 @@ enum Commands {
 
         path: Option<PathBuf>,
     },
+
+    Clear {
+    },
+
+    Exit {
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -47,6 +53,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                     let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), None);
                 }
             },
+
+            Commands::Clear {} => {
+                clear_terminal();
+            },
+
+            Commands::Exit {} => {
+                clear_terminal();
+                return Ok(());
+            }
         }
     }
 }
@@ -75,4 +90,8 @@ fn list_files(path: PathBuf, all: Option<&bool> ) -> Result<(), Box<dyn Error>> 
     }
 
     Ok(())
+}
+
+fn clear_terminal() {
+    print!("{esc}c", esc = 27 as char);
 }
