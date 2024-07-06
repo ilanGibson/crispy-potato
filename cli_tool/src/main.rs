@@ -96,7 +96,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputEvent::Backspace => {
                         if !input.is_empty() {
                             input.pop();
-                            print!("\x08 \x08");
+                            print!("\x08 \x08"); // move cursor back, overwrite with space, move cursor back again
                             io::stdout().flush()?;
                         }
                     }
@@ -163,39 +163,4 @@ fn list_files(path: PathBuf, all: Option<&bool> ) -> Result<(), Box<dyn Error>> 
 
 fn clear_terminal() {
     print!("{esc}c", esc = 27 as char);
-}
-
-fn get_suggestions(input: &str) -> Vec<String> {
-    let commands = vec![
-        "help".to_string(),
-        "exit".to_string(),
-        "lsss".to_string(),
-        "show".to_string(),
-    ];
-
-    commands.into_iter().filter(|cmd| cmd.starts_with(input)).collect()
-}
-
-fn handle_events(stdout: &mut io::Stdout) -> crossterm::Result<()> {
-    let input = String::new();
-
-
-    loop {
-        if event::poll(Duration::from_millis(500))? {
-            if let Event::Key(key_event) = event::read()? {
-                match key_event.code {
-                    KeyCode::Tab => {
-                        println!("input is {}", input);
-                        let suggestions = get_suggestions(&input);
-                        if !suggestions.is_empty() {
-                            writeln!(stdout, "\nSuggestions: {:?}", suggestions)?;
-                            stdout.flush().unwrap();
-                        }
-                    }
-
-                    _ => {return Ok(())}
-                }
-            }
-        }
-    }
 }
