@@ -41,7 +41,7 @@ enum InputEvent {
     Char(char),
     Enter,
     Tab,
-    Delete,
+    Backspace,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -66,8 +66,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                             let _ = tx.send(InputEvent::Tab);
                             break;
                         }
-                        KeyCode::Delete => {
-                            let _ = tx.send(InputEvent::Delete);
+                        KeyCode::Backspace => {
+                            let _ = tx.send(InputEvent::Backspace);
                         }
                         _ => {}
                     }
@@ -93,8 +93,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputEvent::Tab => {
                         break;
                     }
-                    InputEvent::Delete => {
-                        break;
+                    InputEvent::Backspace => {
+                        if !input.is_empty() {
+                            input.pop();
+                            print!("\x08 \x08");
+                            io::stdout().flush()?;
+                        }
                     }
 
                 }
