@@ -126,6 +126,7 @@ fn cli_match(input: String) -> Result<(), Box<dyn Error>> {
 
         Commands::Exit {} => {
             clear_terminal();
+            std::process::exit(0);
         }
     }
     return Ok(())
