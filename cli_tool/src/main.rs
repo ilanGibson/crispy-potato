@@ -85,10 +85,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                         io::stdout().flush()?;
                     }
                     InputEvent::Enter => {
-                        disable_raw_mode()?;
-                        print!("\n");
-                        cli_match(input.clone())?;
-                        break;
+                        if input.is_empty() {
+                            disable_raw_mode()?;
+                            break;
+                        } else {
+                            disable_raw_mode()?;
+                            print!("\n");
+                            cli_match(input.clone())?;
+                            break;
+                        }
                     }
                     InputEvent::Tab => {
                         break;
