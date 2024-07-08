@@ -1,8 +1,14 @@
 use clap::{Parser, Subcommand};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::{fs, io};
 use std::io::Write;
 use std::error::Error;
 use std::path::PathBuf;
+
+use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use std::time::Duration;
+use std::thread;
+use std::sync::mpsc;
 
 #[derive(clap::Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -30,40 +36,109 @@ enum Commands {
     },
 }
 
+#[derive(Debug)]
+enum InputEvent {
+    Char(char),
+    Enter,
+    Tab,
+    Backspace,
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     loop {
         print!("\ncli_tool> ");
-        io::stdout().flush().unwrap();
+        io::stdout().flush()?;
+        let _ = enable_raw_mode();
+        let (tx, rx) = mpsc::channel();
+
+        thread::spawn(move || {
+            loop {
+                if let Ok(Event::Key(KeyEvent { code, modifiers: _ })) = event::read() {
+                    match code {
+                        KeyCode::Char(c) => {
+                            let _ = tx.send(InputEvent::Char(c));
+                        }
+                        KeyCode::Enter => {
+                            let _ = tx.send(InputEvent::Enter);
+                            break;
+                        }
+                        KeyCode::Tab => {
+                            let _ = tx.send(InputEvent::Tab);
+                            break;
+                        }
+                        KeyCode::Backspace => {
+                            let _ = tx.send(InputEvent::Backspace);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        });
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("fail");
+        loop {
+            if let Ok(event) = rx.recv_timeout(Duration::from_millis(10)) {
+                match event {
+                    InputEvent::Char(c) => {
+                        input.push(c);
+                        print!("{}", c);
+                        io::stdout().flush()?;
+                    }
+                    InputEvent::Enter => {
+                        if input.is_empty() {
+                            disable_raw_mode()?;
+                            break;
+                        } else {
+                            disable_raw_mode()?;
+                            print!("\n");
+                            cli_match(input.clone())?;
+                            break;
+                        }
+                    }
+                    InputEvent::Tab => {
+                        break;
+                    }
+                    InputEvent::Backspace => {
+                        if !input.is_empty() {
+                            input.pop();
+                            print!("\x08 \x08"); // move cursor back, overwrite with space, move cursor back again
+                            io::stdout().flush()?;
+                        }
+                    }
 
-        let mut args: Vec<&str> = input.split_whitespace().collect();
-        args.insert(0, "cli_tool");
-
-        let cli = Cli::parse_from(&args);
-
-
-        match &cli.command {
-            Commands::Ls { list: _, all, path} => {
-                let default_path = PathBuf::from(".");
-                if *all {
-                    let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), Some(all));
-                } else {
-                    let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), None);
                 }
-            },
-
-            Commands::Clear {} => {
-                clear_terminal();
-            },
-
-            Commands::Exit {} => {
-                clear_terminal();
-                return Ok(());
             }
         }
     }
+}
+
+
+fn cli_match(input: String) -> Result<(), Box<dyn Error>> {
+    let mut args: Vec<&str> = input.split_whitespace().collect();
+    args.insert(0, "cli_tool");
+
+    let cli = Cli::parse_from(&args);
+
+    match &cli.command {
+        Commands::Ls { list: _, all, path} => {
+            let default_path = PathBuf::from(".");
+            if *all {
+                let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), Some(all));
+            } else {
+                let _ = list_files(path.as_ref().unwrap_or(&default_path).clone(), None);
+            }
+        },
+
+        Commands::Clear {} => {
+            clear_terminal();
+        },
+
+        Commands::Exit {} => {
+            clear_terminal();
+            std::process::exit(0);
+        }
+    }
+    return Ok(())
 }
 
 fn list_files(path: PathBuf, all: Option<&bool> ) -> Result<(), Box<dyn Error>> {
@@ -88,7 +163,6 @@ fn list_files(path: PathBuf, all: Option<&bool> ) -> Result<(), Box<dyn Error>> 
             continue;
         }
     }
-
     Ok(())
 }
 
